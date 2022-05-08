@@ -75,15 +75,17 @@ def get_columns() -> list[str]:
     ]
 
 def mkdir(dir_name: os.path)->None:
-    if not os.isdir(dir_name):
+    if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
     return
+
 def compute_grouped(
     df: pd.DataFrame,
     columns: list[str],
     groupby: list[str],
     clustering_algo: ClusteringAlgorythm,
     stats: list[str] = None,
+    ignore_val = 20,
 ) -> None:
     """
     :param df: pd.Dataframe of input data
@@ -101,16 +103,21 @@ def compute_grouped(
         # group is a tuple(groupbyID, dataframe grouped)
         data = group[1]
         group_name = group[0]
-        if data.shape[0] > 20:
+        if data.shape[0] > ignore_val:
             print(f"GROUP:\t{group_name}")
             data = Clusterer(clustering_algo).start(df, columns)
             clustered_groups.append((group_name, data))
+            group_dir = group_dir_name+f"/{group_name}"
+            mkdir(group_dir)
+            data.to_excel(group_dir+f"/Clustered:{group_name}.xlsx")
+            groupanddescribe(data, slc=columns, statistics=stats, count=True).to_excel(group_dir+f"/Metadata:{group_name}.xlsx")
+            graph_the_data_by_cluster(data, group_dir, ["Temperature0", "Pressure0", "Phi0"],True, group_name+f"{['Temperature0', 'Pressure0', 'Phi0']}")
+            graph_the_data_by_cluster(data, group_dir, ["Temperature1", "Pressure1", "Phi1"],True, group_name+f"{['Temperature1', 'Pressure1', 'Phi1']}")
+
 
         else:
             ignored.append(group_name)
-
     print(f"ignored values\n{ignored}")
-    groupanddescribe(clustered_groups[0][1], slc=columns, statistics=stats, count=True)
 
 
 # performs descriptive analysis on clustered data
@@ -153,7 +160,7 @@ def groupanddescribe(
 
 
 def graph_the_data_by_cluster(
-    data, columns=["Temperature0", "Pressure0", "Phi0"], ignore_noise=False, title=None
+    data, directory, columns=["Temperature0", "Pressure0", "Phi0"], ignore_noise=False, title=None
 ):
     fig = plt.figure(figsize=(12, 9))
     ax = Axes3D(fig, auto_add_to_figure=False)
@@ -180,7 +187,8 @@ def graph_the_data_by_cluster(
     ax.legend(ncol=4, bbox_to_anchor=(2, 1), loc="upper right", title=title)
     fig.add_axes(ax)
     print(os.curdir)
-    fig.savefig(f"./metadata/whole_dataset/{title}{columns}.png", bbox_inches="tight")
+    fig.savefig(f"{directory}/{title}{columns}.png", bbox_inches="tight")
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -217,13 +225,20 @@ if __name__ == "__main__":
     print(metadata)
     graph_the_data_by_cluster(
         data,
+        "./metadata/whole_dataset",
         ["Temperature1", "Pressure1", "Phi1"],
         ignore_noise=True,
         title="WHOLE DATASET",
     )
     graph_the_data_by_cluster(
         data,
+        "./metadata/whole_dataset",
         ["Temperature0", "Pressure0", "Phi0"],
         ignore_noise=True,
         title="WHOLE DATASET",
     )
+
+    df = pd.read_excel("./input_files/data.xlsx")
+    df = ip.parse(df)
+    compute_grouped(df, get_columns(), get_groupby(), AlgoKmeans, stats)
+

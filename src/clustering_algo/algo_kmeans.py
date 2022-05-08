@@ -20,7 +20,7 @@ class AlgoKmeans(ClusteringAlgorythm):
         """
         to_cluster = df.loc[:, columns]
         # for i in range(1,100):
-        clusters = cluster.KMeans(n_clusters=100).fit(to_cluster)
+        clusters = cluster.KMeans(n_clusters=10).fit(to_cluster)
         retval = df.copy()
         retval["ClusterID"] = clusters.labels_
         return retval
