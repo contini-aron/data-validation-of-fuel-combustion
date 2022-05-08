@@ -22,10 +22,3 @@ class ClusteringAlgorythm(ABC):
         :param data: pd.Dataframe containing data to cluster
         :return: pd.Dataframe containing a new column that indicates the cluster
         """
-
-    @abstractmethod
-    def __str__(self) -> str:
-        """
-        string that represents the accuracy of clustering
-        :return: str
-        """

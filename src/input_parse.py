@@ -10,7 +10,7 @@ class InputParser:
     class to format the input data
     """
 
-    df: pd.DataFrame = pd.DataFrame
+    df: pd.DataFrame = pd.DataFrame()
 
     def __init__(self, df: pd.DataFrame) -> None:
         self.df = df

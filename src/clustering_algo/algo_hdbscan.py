@@ -4,19 +4,16 @@ Concrete implementation of clustering algorythm following HDBSCAN algorythm
 
 import hdbscan
 import pandas as pd
-from clustering_algorythm import ClusteringAlgorythm
+from src.clustering_algo.clustering_algorythm import ClusteringAlgorythm
 
 
-class HDBSCAN(ClusteringAlgorythm):
+class AlgoHDBSCAN(ClusteringAlgorythm):
     """
     the concrete algorythm
     """
 
-    def __init__(self):
-        self.probabilities = None
-        self.clusterer = None
-
-    def cluster(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    @staticmethod
+    def cluster(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
         """
         :param df: the input dataframe
         :param columns: the columns on where to run HDBSCAN
@@ -56,18 +53,12 @@ class HDBSCAN(ClusteringAlgorythm):
                         ].shape[0]
                         if metrics != best_min_cluster[best_metric]:
                             best_min_cluster[best_metric] = metrics
-        self.probabilities = str(best_min_cluster)
+        # probabilities = str(best_min_cluster)
         clusterer = hdbscan.HDBSCAN(
             min_cluster_size=best_min_cluster[n_cluster],
             metric=best_min_cluster[best_metric],
         )
-        self.clusterer = clusterer.fit(to_cluster)
+        clusterer = clusterer.fit(to_cluster)
         retval = df.copy()
         retval["ClusterID"] = clusterer.labels_
         return retval
-
-    def __str__(self):
-        """
-        :return: a str containing evaluation information
-        """
-        return self.probabilities
