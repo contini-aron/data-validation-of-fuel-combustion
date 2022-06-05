@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from src.clustering_algo.clustering_algorythm import ClusteringAlgorythm
+from percentile import plot_percentiles
 
 
 def get_groupby():
@@ -74,10 +75,12 @@ def get_columns() -> list[str]:
         "shift",
     ]
 
-def mkdir(dir_name: os.path)->None:
+
+def mkdir(dir_name: os.path) -> None:
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
     return
+
 
 def compute_grouped(
     df: pd.DataFrame,
@@ -85,7 +88,7 @@ def compute_grouped(
     groupby: list[str],
     clustering_algo: ClusteringAlgorythm,
     stats: list[str] = None,
-    ignore_val = 20,
+    ignore_val=20,
 ) -> None:
     """
     :param df: pd.Dataframe of input data
@@ -107,13 +110,26 @@ def compute_grouped(
             print(f"GROUP:\t{group_name}")
             data = Clusterer(clustering_algo).start(df, columns)
             clustered_groups.append((group_name, data))
-            group_dir = group_dir_name+f"/{group_name}"
+            group_dir = group_dir_name + f"/{group_name}"
             mkdir(group_dir)
-            data.to_excel(group_dir+f"/Clustered:{group_name}.xlsx")
-            groupanddescribe(data, slc=columns, statistics=stats, count=True).to_excel(group_dir+f"/Metadata:{group_name}.xlsx")
-            graph_the_data_by_cluster(data, group_dir, ["Temperature0", "Pressure0", "Phi0"],True, group_name+f"{['Temperature0', 'Pressure0', 'Phi0']}")
-            graph_the_data_by_cluster(data, group_dir, ["Temperature1", "Pressure1", "Phi1"],True, group_name+f"{['Temperature1', 'Pressure1', 'Phi1']}")
-
+            data.to_excel(group_dir + f"/Clustered:{group_name}.xlsx")
+            groupanddescribe(data, slc=columns, statistics=stats, count=True).to_excel(
+                group_dir + f"/Metadata:{group_name}.xlsx"
+            )
+            graph_the_data_by_cluster(
+                data,
+                group_dir,
+                ["Temperature0", "Pressure0", "Phi0"],
+                True,
+                group_name + f"{['Temperature0', 'Pressure0', 'Phi0']}",
+            )
+            graph_the_data_by_cluster(
+                data,
+                group_dir,
+                ["Temperature1", "Pressure1", "Phi1"],
+                True,
+                group_name + f"{['Temperature1', 'Pressure1', 'Phi1']}",
+            )
 
         else:
             ignored.append(group_name)
@@ -160,7 +176,11 @@ def groupanddescribe(
 
 
 def graph_the_data_by_cluster(
-    data, directory, columns=["Temperature0", "Pressure0", "Phi0"], ignore_noise=False, title=None
+    data,
+    directory,
+    columns=["Temperature0", "Pressure0", "Phi0"],
+    ignore_noise=False,
+    title=None,
 ):
     fig = plt.figure(figsize=(12, 9))
     ax = Axes3D(fig, auto_add_to_figure=False)
@@ -211,6 +231,7 @@ if __name__ == "__main__":
         data = clusterer.start(df, columns)
         print(data)
         print(data["ClusterID"].max())
+        plot_percentiles(df.loc[:,get_columns()])
         data.to_excel("./metadata/clustered.xlsx")
 
     data = pd.read_excel("./metadata/clustered.xlsx")
@@ -241,4 +262,3 @@ if __name__ == "__main__":
     df = pd.read_excel("./input_files/data.xlsx")
     df = ip.parse(df)
     compute_grouped(df, get_columns(), get_groupby(), AlgoKmeans, stats)
-
