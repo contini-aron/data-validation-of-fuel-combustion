@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import input_parse as ip
 import matplotlib.pyplot as plt
-from main import get_columns
+from columns import get_columns
 
 
 def get_percentile_density() -> list[float]:

@@ -4,79 +4,18 @@ boy
 import os
 import pandas as pd
 import input_parse as ip
-from src.clusterer import Clusterer
+from clusterer import Clusterer
 from clustering_algo.algo_hdbscan import AlgoHDBSCAN
 from clustering_algo.algo_affinitypropagation import AlgoAffinityPropagation
 from clustering_algo.algo_kmeans import AlgoKmeans
+from clustering_algo.clustering_algorythm import ClusteringAlgorythm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
-from src.clustering_algo.clustering_algorythm import ClusteringAlgorythm
 from percentile import plot_percentiles
+from columns import *
 
 
-def get_groupby():
-    return [
-        # "Experiment DOI",
-        # "Exp SciExpeM ID",
-        # "Chem Model",
-        # "Chem Model ID",
-        # "Experiment Type",
-        # "Reactor",
-        "Target",
-        # "Fuels",
-        # "Phi",
-        # "Phi0",
-        # "Phi1",
-        # "Pressure",
-        # "P0",
-        # "P1",
-        # "Temperature",
-        # "T0",
-        # "T1",
-        # "Score",
-        # "Error",
-        # "d0L2",
-        # "d1L2",
-        # "d0Pe",
-        # "d1Pe",
-        # "shift"
-    ]
-
-
-def get_columns() -> list[str]:
-    """
-    :return: default column names used for clustering
-    """
-    return [
-        # "Experiment DOI",
-        # "Exp SciExpeM ID",
-        # "Chem Model",
-        # "Chem Model ID",
-        # "Experiment Type",
-        # "Reactor",
-        # "Target",
-        # "Fuels",
-        # "Phi",
-        "Phi0",
-        "Phi1",
-        # "Pressure",
-        "Pressure0",
-        "Pressure1",
-        # "Temperature",
-        "Temperature0",
-        "Temperature1",
-        "Score",
-        "Error",
-        "d0L2",
-        "d1L2",
-        "d0Pe",
-        "d1Pe",
-        "shift",
-    ]
-
-
-def mkdir(dir_name: os.path) -> None:
+def mkdir(dir_name: str) -> None:
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
     return
@@ -87,7 +26,7 @@ def compute_grouped(
     columns: list[str],
     groupby: list[str],
     clustering_algo: ClusteringAlgorythm,
-    stats: list[str] = None,
+    stats=None,
     ignore_val=20,
 ) -> None:
     """
@@ -121,14 +60,14 @@ def compute_grouped(
                 group_dir,
                 ["Temperature0", "Pressure0", "Phi0"],
                 True,
-                group_name + f"{['Temperature0', 'Pressure0', 'Phi0']}",
+                str(group_name) + f"{['Temperature0', 'Pressure0', 'Phi0']}",
             )
             graph_the_data_by_cluster(
                 data,
                 group_dir,
                 ["Temperature1", "Pressure1", "Phi1"],
                 True,
-                group_name + f"{['Temperature1', 'Pressure1', 'Phi1']}",
+                str(group_name) + f"{['Temperature1', 'Pressure1', 'Phi1']}",
             )
 
         else:
@@ -231,7 +170,7 @@ if __name__ == "__main__":
         data = clusterer.start(df, columns)
         print(data)
         print(data["ClusterID"].max())
-        plot_percentiles(df.loc[:,get_columns()])
+        plot_percentiles(df.loc[:, get_columns()])
         data.to_excel("./metadata/clustered.xlsx")
 
     data = pd.read_excel("./metadata/clustered.xlsx")

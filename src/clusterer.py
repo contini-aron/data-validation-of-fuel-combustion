@@ -3,8 +3,8 @@ cluster the data and retrieve the matrix containing the clusters
 """
 from __future__ import annotations
 import pandas as pd
-from src.input_parse import parse
-from src.clustering_algo.clustering_algorythm import ClusteringAlgorythm
+from input_parse import parse
+from clustering_algo.clustering_algorythm import ClusteringAlgorythm
 
 
 class Clusterer:
