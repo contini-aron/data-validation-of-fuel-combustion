@@ -4,7 +4,7 @@ Concrete implementation of clustering algorythm following HDBSCAN algorythm
 
 import hdbscan
 import pandas as pd
-from clustering_algo.clustering_algorythm import ClusteringAlgorythm
+from . import ClusteringAlgorythm
 
 
 class AlgoHDBSCAN(ClusteringAlgorythm):

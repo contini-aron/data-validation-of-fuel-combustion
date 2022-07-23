@@ -2,7 +2,7 @@
 concrete clustering algorythm : KMEANS
 """
 import pandas as pd
-from clustering_algo.clustering_algorythm import ClusteringAlgorythm
+from . import ClusteringAlgorythm
 from sklearn import cluster
 
 

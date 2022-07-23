@@ -77,23 +77,29 @@ def compute_grouped(
 
 # performs descriptive analysis on clustered data
 def groupanddescribe(
-    data,
-    groupby_elem=None,
-    slc=None,
-    statistics=None,
-    count=False,
+    data:pd.DataFrame,  # data to be analyzed
+    groupby_elem:list[str]=None,  # column to group by
+    slc:list[str]=None,  # columns to be analyzed
+    statistics:dict[str:function]=None,  # dictionary of statistics to be shown
+    count:bool=False, # if true, counts are shown
 ):
+    """
+    creates a multiindex dataframe grouping data by groupby_elem with columns as the stats chosen
+    """
+    # adds default values to slc, groupby_elem and statistics if not provided
     if slc is None:
         slc = ["Phi0"]
     if groupby_elem is None:
         groupby_elem = ["ClusterID"]
     if statistics is None:
         statistics = {"mean": pd.core.groupby.GroupBy.mean}
+
     # init empty dataframe
     retval = pd.DataFrame()
     if count:
         statistics["count"] = pd.core.groupby.GroupBy.count
 
+    # for every stat in statistics, computes the stat on the data
     for stat_name, stat in statistics.items():
 
         grouped = data.groupby(groupby_elem)[slc]
@@ -180,6 +186,7 @@ if __name__ == "__main__":
         stat_name: getattr(pd.core.groupby.GroupBy, stat_name)
         for stat_name in stat_names
     }
+    print("bro type is :", type(stats["mean"]))
     metadata = groupanddescribe(data, slc=columns, statistics=stats, count=True)
     metadata.to_excel("./metadata/metadata.xlsx")
     print(metadata)

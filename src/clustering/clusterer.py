@@ -3,8 +3,7 @@ cluster the data and retrieve the matrix containing the clusters
 """
 from __future__ import annotations
 import pandas as pd
-from input_parse import parse
-from clustering_algo.clustering_algorythm import ClusteringAlgorythm
+from clustering_algorythms import ClusteringAlgorythm
 
 
 class Clusterer:
@@ -39,11 +38,3 @@ class Clusterer:
         :return: the clustered dataframe
         """
         return self.clustering_algo.cluster(df=df, columns=columns)
-
-
-if __name__ == "__main__":
-    input_data = pd.read_excel(
-        "/home/aron/Documents/Progetto_Data_mining/"
-        "data-validation-of-fuel-combustion/src/input_files/data.xlsx"
-    )
-    input_data = parse(input_data)

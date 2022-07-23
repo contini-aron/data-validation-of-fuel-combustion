@@ -1,8 +1,5 @@
 import pandas as pd
-import numpy as np
-import input_parse as ip
 import matplotlib.pyplot as plt
-from columns import get_columns
 
 
 def get_percentile_density() -> list[float]:
@@ -17,6 +14,7 @@ def plot_percentiles(df: pd.DataFrame) -> None:
     plt.savefig("./metadata/whole_dataset/percentiles.png")
 
 
+"""
 if __name__ == "__main__":
     df = pd.read_excel("./metadata/clustered.xlsx")
 
@@ -24,3 +22,4 @@ if __name__ == "__main__":
     print(df.quantile(get_percentile_density()).unstack())
     df = df.loc[:, get_columns()]
     plot_percentiles(df)
+"""
