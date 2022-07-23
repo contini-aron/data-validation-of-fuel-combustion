@@ -32,18 +32,31 @@ class AlgoHDBSCAN(ClusteringAlgorythm):
             n_noise: to_cluster.shape[0],
             best_metric: "euclidean",
         }
-        for metrics in hdbscan.dist_metrics.METRIC_MAPPING.keys():
+
+        # performing evaluation based on mean probability of fitting in a certain cluster
+        # to find the best metrics and the best number of clusters
+        # HDBSCAN is self evaluating and probabilty of fitting based, with noise detection
+        for (
+            metrics
+        ) in (
+            hdbscan.dist_metrics.METRIC_MAPPING.keys()
+        ):  # loops in each metrics e.g euclidean , ...
+
+            # loops in a number of cluster starting from 2 and going to the min between 100 and the number of rows in input
             for i in range(2, min(100, to_cluster.shape[0])):
                 clusterer = hdbscan.HDBSCAN(min_cluster_size=i)
                 clusterer = clusterer.fit(to_cluster)
+                # if a probability is 0 then belongs to a noise so we want to reduce it
                 if (
                     clusterer.probabilities_[clusterer.probabilities_ == 0].shape[0]
                     <= best_min_cluster[n_noise]
                 ):
+                    # more mean pobability -> more likely fitting clusters
                     if (
                         clusterer.probabilities_[clusterer.probabilities_ > 0].mean()
                         > best_min_cluster[prob]
                     ):
+                        # marks the clustering inputs as the best till now
                         best_min_cluster[n_cluster] = i
                         best_min_cluster[prob] = clusterer.probabilities_[
                             clusterer.probabilities_ > 0
@@ -53,12 +66,15 @@ class AlgoHDBSCAN(ClusteringAlgorythm):
                         ].shape[0]
                         if metrics != best_min_cluster[best_metric]:
                             best_min_cluster[best_metric] = metrics
-        # probabilities = str(best_min_cluster)
+
+        # computes again for the best inputs
         clusterer = hdbscan.HDBSCAN(
             min_cluster_size=best_min_cluster[n_cluster],
             metric=best_min_cluster[best_metric],
         )
         clusterer = clusterer.fit(to_cluster)
         retval = df.copy()
+
+        # adds a column defining with cluster the row belongs to
         retval["ClusterID"] = clusterer.labels_
         return retval
