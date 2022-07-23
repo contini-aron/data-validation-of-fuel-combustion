@@ -161,7 +161,7 @@ def graph_the_data_by_cluster(
 if __name__ == "__main__":
     os.chdir(os.path.abspath(os.path.join(os.path.curdir, "src")))
     print("cwd is" + os.path.abspath(os.curdir))
-    cluster = True
+    cluster = False
     columns = get_columns()
     if cluster:
         file = os.path.join(os.path.join(os.path.curdir, "input_files"), "data.xlsx")
@@ -207,6 +207,13 @@ if __name__ == "__main__":
         title="WHOLE DATASET",
     )
 
+    graph_the_data_by_cluster(
+        data,
+        "./metadata/whole_dataset",
+        ["Score", "d0L2", "d1L2"],
+        ignore_noise=True,
+        title="WHOLE DATASET",
+    )
     df = pd.read_excel("./input_files/data.xlsx")
     df = ip.parse(df)
     compute_grouped(df, get_columns(), get_groupby(), AlgoKmeans, stats)
