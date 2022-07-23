@@ -3,7 +3,7 @@ cluster the data and retrieve the matrix containing the clusters
 """
 from __future__ import annotations
 import pandas as pd
-from clustering_algorythms import ClusteringAlgorythm
+from .clustering_algorythms import ClusteringAlgorythm
 
 
 class Clusterer:

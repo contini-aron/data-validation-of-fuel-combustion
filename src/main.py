@@ -3,16 +3,16 @@ boy
 """
 import os
 import pandas as pd
-import input_parse as ip
-from clusterer import Clusterer
-from clustering_algo.algo_hdbscan import AlgoHDBSCAN
-from clustering_algo.algo_affinitypropagation import AlgoAffinityPropagation
-from clustering_algo.algo_kmeans import AlgoKmeans
-from clustering_algo.clustering_algorythm import ClusteringAlgorythm
+from clustering import Clusterer
+from clustering import input_parse as ip
+from clustering import AlgoHDBSCAN
+from clustering import AlgoAffinityPropagation
+from clustering import AlgoKmeans
+from clustering import ClusteringAlgorythm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from percentile import plot_percentiles
-from columns import *
+from clustering import plot_percentiles
+from clustering import get_columns, get_groupby
 
 
 def mkdir(dir_name: str) -> None:
@@ -37,7 +37,9 @@ def compute_grouped(
     :param stats: the statistics to be shown
     :return: None
     """
-    group_dir_name = f"./metadata/grouped/GroupedBy:{groupby}"
+    print("current dir is ", os.path.abspath(os.curdir))
+    print("wanted path is ", os.path.abspath(os.path.join(os.curdir, "metadata"+os.sep+"grouped"+ os.sep+f"GroupedBy_{groupby}")))
+    group_dir_name = os.path.abspath(os.path.join(os.curdir, "metadata"+os.sep+"grouped"+ os.sep+f"GroupedBy_{groupby}"))
     mkdir(group_dir_name)
     ignored = []
     clustered_groups = []
@@ -80,7 +82,7 @@ def groupanddescribe(
     data:pd.DataFrame,  # data to be analyzed
     groupby_elem:list[str]=None,  # column to group by
     slc:list[str]=None,  # columns to be analyzed
-    statistics:dict[str:function]=None,  # dictionary of statistics to be shown
+    statistics:dict=None,  # dictionary of statistics to be shown
     count:bool=False, # if true, counts are shown
 ):
     """
@@ -159,7 +161,7 @@ def graph_the_data_by_cluster(
 if __name__ == "__main__":
     os.chdir(os.path.abspath(os.path.join(os.path.curdir, "src")))
     print("cwd is" + os.path.abspath(os.curdir))
-    cluster = False
+    cluster = True
     columns = get_columns()
     if cluster:
         file = os.path.join(os.path.join(os.path.curdir, "input_files"), "data.xlsx")
