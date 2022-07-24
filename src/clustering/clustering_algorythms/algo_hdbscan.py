@@ -5,6 +5,7 @@ Concrete implementation of clustering algorythm following HDBSCAN algorythm
 import hdbscan
 import pandas as pd
 from . import ClusteringAlgorythm
+from .norm import normalize
 
 
 class AlgoHDBSCAN(ClusteringAlgorythm):
@@ -20,6 +21,7 @@ class AlgoHDBSCAN(ClusteringAlgorythm):
         :return: the clustered Dataframe
         """
         to_cluster = df.loc[:, columns]
+        to_cluster = normalize(to_cluster)
         n_cluster, prob, n_noise, best_metric = (
             "n_cluster",
             "probabilty",
@@ -46,15 +48,15 @@ class AlgoHDBSCAN(ClusteringAlgorythm):
             for i in range(2, min(100, to_cluster.shape[0])):
                 clusterer = hdbscan.HDBSCAN(min_cluster_size=i)
                 clusterer = clusterer.fit(to_cluster)
-                # if a probability is 0 then belongs to a noise so we want to reduce it
+                # more mean probability -> more likely fitting clusters
                 if (
-                    clusterer.probabilities_[clusterer.probabilities_ == 0].shape[0]
-                    <= best_min_cluster[n_noise]
+                    clusterer.probabilities_[clusterer.probabilities_ > 0].mean()
+                    > best_min_cluster[prob]
                 ):
-                    # more mean pobability -> more likely fitting clusters
+                    # if a probability is 0 then belongs to a noise so we want to reduce it
                     if (
-                        clusterer.probabilities_[clusterer.probabilities_ > 0].mean()
-                        > best_min_cluster[prob]
+                        clusterer.probabilities_[clusterer.probabilities_ == 0].shape[0]
+                        <= best_min_cluster[n_noise]
                     ):
                         # marks the clustering inputs as the best till now
                         best_min_cluster[n_cluster] = i

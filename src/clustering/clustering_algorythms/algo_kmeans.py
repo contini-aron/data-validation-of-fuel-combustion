@@ -5,6 +5,7 @@ from math import sqrt
 import pandas as pd
 from . import ClusteringAlgorythm
 from sklearn import cluster
+from .norm import normalize
 
 
 def get_n_best(df: pd.DataFrame):
@@ -33,7 +34,7 @@ def get_n_best(df: pd.DataFrame):
         numerator = abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1)
         denominator = sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
         distances.append(numerator / denominator)
-    return distances.index(max(distances))  # the first n_cluster is 2
+    return distances.index(max(distances)) + 2 # the first n_cluster is 2
 
 
 class AlgoKmeans(ClusteringAlgorythm):
@@ -50,8 +51,10 @@ class AlgoKmeans(ClusteringAlgorythm):
         """
         print("evaluating algorythm Kmeans")
         to_cluster = df.loc[:, columns]
-        # for i in range(1,100):
-        clusters = cluster.KMeans(n_clusters=get_n_best(to_cluster)).fit(to_cluster)
+        to_cluster = normalize(to_cluster)
+        n_best = get_n_best(to_cluster)
+        print("best n of cluster is", n_best)
+        clusters = cluster.KMeans(n_clusters=n_best).fit(to_cluster)
         retval = df.copy()
-        retval["ClusterID"] = clusters.labels_
+        retval["ClusterID"] = clusters.labels_ + 1 # to maintain the count from 1
         return retval
