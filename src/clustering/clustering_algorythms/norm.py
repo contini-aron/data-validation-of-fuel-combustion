@@ -7,7 +7,9 @@ def normalize(df: pd.DataFrame, minmax:bool = False)->pd.DataFrame:
     """
     names = df.columns
     if not minmax:
-        return pd.DataFrame(preprocessing.normalize(df, axis=0), columns=names)
+        retval= pd.DataFrame(preprocessing.normalize(df, axis=0), columns=names)
+        print(retval)
+        return retval
     else:
         scaler = preprocessing.MinMaxScaler()
         return pd.DataFrame(scaler.fit_transform(df), columns=names)

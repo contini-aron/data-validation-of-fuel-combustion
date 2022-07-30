@@ -33,18 +33,24 @@ if __name__ == "__main__":
 
         # clusterer = Clusterer(AlgoAffinityPropagation)
         # print(clusterer.start(df, columns))
-        clusterer = Clusterer(AlgoKmeans)
+        #clusterer = Clusterer(AlgoKmeans)
         #data = clusterer.start(df, columns)
         #print(clusterer.clustered)
-        #metadata = clusterer.metadata(slc=columns, statistics_names=stat_names, count=True)
+        #metadata = clusterer.get_metadata(slc=columns, statistics_names=stat_names, count=True)
         #print(clusterer.metadata)
         #clusterer.get_best_clusters()
-        data = clusterer.start(df, columns, groupby=["Target"])
+        #clusterer.parallel_coordinates_plot()
+        #data = clusterer.start(df, columns, groupby=["Target"])
+        #clusterer.export(groupby=True)
 
 
 
         clusterer = Clusterer(AlgoHDBSCAN)
-        data = clusterer.start(df, columns)
+        #data = clusterer.start(df, columns)
+        data = pd.read_excel(f"{os.curdir}{os.sep}metadata{os.sep}clustered.xlsx")
+        clusterer.get_metadata(data=data, slc=columns, statistics_names=stat_names, count=True)
+        clusterer.get_best_clusters()
+        clusterer.parallel_coordinates_plot()
         print(data)
         print(data["ClusterID"].max())
         plot_percentiles(df.loc[:, get_columns()])

@@ -116,7 +116,7 @@ def graph_the_data_by_cluster(
     data,
     directory,
     columns=["Temperature0", "Pressure0", "Phi0"],
-    ignore_noise=False,
+    ignore_noise=True,
     title=None,
 ):
     fig = plt.figure(figsize=(12, 9))
