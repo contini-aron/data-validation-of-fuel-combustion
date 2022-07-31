@@ -7,6 +7,7 @@ from clustering import Clusterer
 from clustering import input_parse as ip
 from clustering import AlgoHDBSCAN
 from clustering import AlgoAffinityPropagation
+from clustering import AlgoSpectral
 from clustering import AlgoKmeans
 from clustering import plot_percentiles
 from clustering import get_columns, get_groupby
@@ -45,9 +46,9 @@ if __name__ == "__main__":
 
 
 
-        clusterer = Clusterer(AlgoHDBSCAN)
-        #data = clusterer.start(df, columns)
-        data = pd.read_excel(f"{os.curdir}{os.sep}metadata{os.sep}clustered.xlsx")
+        clusterer = Clusterer(AlgoKmeans)
+        data = clusterer.start(df, columns)
+        #data = pd.read_excel(f"{os.curdir}{os.sep}metadata{os.sep}clustered.xlsx")
         clusterer.get_metadata(data=data, slc=columns, statistics_names=stat_names, count=True)
         clusterer.get_best_clusters()
         clusterer.parallel_coordinates_plot()
