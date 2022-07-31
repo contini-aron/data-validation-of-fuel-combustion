@@ -11,6 +11,7 @@ import os
 import matplotlib.pyplot as plt
 from .clustering_algorythms.norm import normalize
 import numpy as np
+import plotly.express as px
 
 
 class Clusterer:
@@ -185,9 +186,9 @@ class Clusterer:
                 )
 
     def parallel_coordinates_plot(
-        self, df: pd.DataFrame = None, columns: list[str] = get_columns()
+        self, df: pd.DataFrame = None, columns: list[str] = None, cluster_id:str = "ClusterID", palette = ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"]
     ):
-        if df is None:
+        if columns is None:
             columns = [
                 "Score",
                 "d0L2",
@@ -199,38 +200,25 @@ class Clusterer:
                 "Pressure0",
                 "Pressure1",
             ]
+        if df is None:
             to_plot = self.clustered[
                 self.clustered["ClusterID"].isin(self.best_clusters)
             ].copy()
-            to_plot = to_plot.loc[:, [i for i in columns] + ["ClusterID"]].copy()
-            clusters = to_plot.loc[:, "ClusterID"].copy().to_numpy()
-            print(to_plot)
-            normalized = normalize(to_plot[columns], minmax=True)
-            normalized["ClusterID"] = clusters
-            print(normalized)
-            parallel_folder = f"{os.curdir}{os.sep}metadata{os.sep}whole_dataset{os.sep}parallel_coordinates_plots"
-            mkdir(parallel_folder)
-            palette = ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"]
-            fig = pd.plotting.parallel_coordinates(
-                normalized,
-                "ClusterID",
-                cols=columns,
-                color = palette
-            ).get_figure()
-            plt.yticks(np.arange(0,1.01, 0.01))
-            fig.set_size_inches(20, 20)
-            fig.savefig(f"{parallel_folder}{os.sep}best_clusters.jpg", dpi=500)
+        to_plot = to_plot.loc[:, [i for i in columns] + ["ClusterID"]].copy()
+        clusters = to_plot.loc[:, cluster_id].copy().to_numpy()
+        print(to_plot)
+        normalized = normalize(to_plot[columns], minmax=True)
+        normalized[cluster_id] = clusters
+        print(normalized)
+        fig = px.parallel_coordinates(to_plot, color=cluster_id, dimensions=columns, color_continuous_scale=palette)
+        parallel_folder = f"{os.curdir}{os.sep}metadata{os.sep}whole_dataset{os.sep}parallel_coordinates_plots"
+        mkdir(parallel_folder)
+        #fig.set_size_inches(40, 20)
+        fig.write_html(f"{parallel_folder}{os.sep}best_clusters.html")
+        plt.close()
+
+        for index, cluster in enumerate(np.unique(clusters)):
+            fig = px.parallel_coordinates(to_plot.loc[to_plot[cluster_id] == cluster], color=cluster_id, dimensions=columns, color_continuous_scale=[palette[index], palette[0]])
+            fig.write_html(f"{parallel_folder}{os.sep}cluster{cluster}.html")
+
             plt.close()
-
-            for index, cluster in enumerate(np.unique(clusters)):
-                fig = pd.plotting.parallel_coordinates(
-                    normalized.loc[normalized["ClusterID"] == cluster],
-                    "ClusterID",
-                    cols=columns,
-                    color = palette[index]
-                ).get_figure()
-                plt.yticks(np.arange(0,1.01, 0.01))
-                fig.set_size_inches(20, 20)
-                fig.savefig(f"{parallel_folder}{os.sep}cluster{cluster}.jpg", dpi=500)
-
-                plt.close()
