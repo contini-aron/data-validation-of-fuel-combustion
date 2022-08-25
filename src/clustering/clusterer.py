@@ -2,7 +2,6 @@
 cluster the data and retrieve the matrix containing the clusters
 """
 from __future__ import annotations
-from tkinter import W
 import pandas as pd
 from . import ClusteringAlgorythm
 from .grouped import groupanddescribe, mkdir
@@ -68,7 +67,7 @@ class Clusterer:
                 if data.shape[0] >= min_cluster_size:
                     print(f"working on GROUP:\t{group_name}")
                     self.groupby_clustered[group_name] = self.clustering_algo.cluster(
-                        df=data, columns=columns
+                        df=data.copy(), columns=columns
                     )
                 else:
                     ignored.append(group_name)
@@ -84,7 +83,7 @@ class Clusterer:
         groupby_elem: list[str] = None,
         slc: list[str] = None,
         statistics_names: dict = None,
-        count: bool = False,
+        count: bool = True,
     ) -> pd.DataFrame:
         """
         start metadata creation
@@ -136,8 +135,8 @@ class Clusterer:
         if metadata is None:
             metadata = self.metadata
         # filter mean Score <=0
+        # print(metadata[percentile_stat, percentile_column])
         metadata = metadata[metadata[percentile_stat][percentile_column] > 0]
-        print(metadata[percentile_stat, percentile_column])
 
         # get nth percentile
         self.percentile = metadata[percentile_stat, percentile_column].quantile(
@@ -167,8 +166,10 @@ class Clusterer:
         mkdir(meta_path)
 
         if not groupby:
-            self.metadata.to_excel(os.path.join(meta_path, "metadata.xlsx"))
-            self.clustered.to_excel(os.path.join(meta_path, "clustered.xlsx"))
+            whole_dataset_path = os.path.join(meta_path, "whole_dataset")
+            mkdir(whole_dataset_path)
+            self.metadata.to_excel(os.path.join(whole_dataset_path, "metadata.xlsx"))
+            self.clustered.to_excel(os.path.join(whole_dataset_path, "clustered.xlsx"))
         else:
             for group_name, group in self.groupby_clustered.items():
                 print("exporting group:", group_name)
@@ -178,6 +179,7 @@ class Clusterer:
                     groups_path, f"grouped_by{self.grouped_by}"
                 )
                 mkdir(group_by_path)
+                group_name = str(group_name).replace("'", "").replace('"', '')
                 group_path = os.path.join(group_by_path, f"{group_name}")
                 mkdir(group_path)
                 group.to_excel(os.path.join(group_path, f"{group_name}clustered.xlsx"))
@@ -186,7 +188,22 @@ class Clusterer:
                 )
 
     def parallel_coordinates_plot(
-        self, df: pd.DataFrame = None, columns: list[str] = None, cluster_id:str = "ClusterID", palette = ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"]
+        self,
+        df: pd.DataFrame = None,
+        columns: list[str] = None, # if u want to specify the columns to consider
+        cluster_id: str = "ClusterID", # the name of the cluster id column
+        palette=[
+            "#b30000",
+            "#7c1158",
+            "#4421af",
+            "#1a53ff",
+            "#0d88e6",
+            "#00b7c7",
+            "#5ad45a",
+            "#8be04e",
+            "#ebdc78",
+        ],
+        folder = None
     ):
         if columns is None:
             columns = [
@@ -204,21 +221,62 @@ class Clusterer:
             to_plot = self.clustered[
                 self.clustered["ClusterID"].isin(self.best_clusters)
             ].copy()
+        else:
+            to_plot = df.copy()
         to_plot = to_plot.loc[:, [i for i in columns] + ["ClusterID"]].copy()
         clusters = to_plot.loc[:, cluster_id].copy().to_numpy()
-        print(to_plot)
-        normalized = normalize(to_plot[columns], minmax=True)
-        normalized[cluster_id] = clusters
-        print(normalized)
-        fig = px.parallel_coordinates(to_plot, color=cluster_id, dimensions=columns, color_continuous_scale=palette)
-        parallel_folder = f"{os.curdir}{os.sep}metadata{os.sep}whole_dataset{os.sep}parallel_coordinates_plots"
+        fig = px.parallel_coordinates(
+            to_plot,
+            color=cluster_id,
+            dimensions=columns,
+            color_continuous_scale=palette,
+        )
+        if folder is None:
+            parallel_folder = f"{os.curdir}{os.sep}metadata{os.sep}whole_dataset{os.sep}parallel_coordinates_plots"
+        else:
+            parallel_folder =  folder
         mkdir(parallel_folder)
-        #fig.set_size_inches(40, 20)
+        # fig.set_size_inches(40, 20)
         fig.write_html(f"{parallel_folder}{os.sep}best_clusters.html")
         plt.close()
 
         for index, cluster in enumerate(np.unique(clusters)):
-            fig = px.parallel_coordinates(to_plot.loc[to_plot[cluster_id] == cluster], color=cluster_id, dimensions=columns, color_continuous_scale=[palette[index], palette[0]])
+            fig = px.parallel_coordinates(
+                to_plot.loc[to_plot[cluster_id] == cluster],
+                color=cluster_id,
+                dimensions=columns,
+                color_continuous_scale=palette,
+            )
             fig.write_html(f"{parallel_folder}{os.sep}cluster{cluster}.html")
 
             plt.close()
+
+
+    def groupby_parallel_plots(self, groupby_columns:list[str] = ["Target"], best:bool=False):
+        groupby_folder = f"{os.curdir}{os.sep}metadata{os.sep}grouped{os.sep}grouped_by{groupby_columns}"
+        # print(groupby_folder)
+        for _, directories, _ in os.walk(groupby_folder):
+            for directory in directories:
+                if directory == "parallel_coordinates_plot":
+                    continue
+                print(f"plotting directory: {directory}")
+                group_dir = f"{groupby_folder}{os.sep}{directory}"
+                to_plot = pd.read_excel(f"{group_dir}{os.sep}{directory}clustered.xlsx")
+                metadata = pd.read_excel(f"{group_dir}{os.sep}{directory}metadata.xlsx", index_col=[0], header=[0,1])
+                count = metadata["count"].to_numpy().copy()
+                metadata.drop(columns=["count"], inplace=True)
+                metadata["count"] = count
+                if best:
+                    self.__set_metadata(metadata)
+                    self.__set_clustered(to_plot)
+                    self.get_best_clusters()
+                self.parallel_coordinates_plot(folder=f"{group_dir}{os.sep}parallel_coordinates_plot")
+    
+    def __set_metadata(self, df:pd.DataFrame)->None:
+        self.metadata = df
+    def __set_clustered(self, df:pd.DataFrame)->None:
+        self.clustered = df
+
+
+
+

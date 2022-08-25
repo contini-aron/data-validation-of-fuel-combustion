@@ -6,6 +6,7 @@ import hdbscan
 import pandas as pd
 from . import ClusteringAlgorythm
 from .norm import normalize
+import numpy as np
 
 
 class AlgoHDBSCAN(ClusteringAlgorythm):
@@ -43,11 +44,15 @@ class AlgoHDBSCAN(ClusteringAlgorythm):
         ) in (
             hdbscan.dist_metrics.METRIC_MAPPING.keys()
         ):  # loops in each metrics e.g euclidean , ...
+            print(f"evaluating {metrics} metric")
 
             # loops in a number of cluster starting from 2 and going to the min between 100 and the number of rows in input
             for i in range(2, min(100, to_cluster.shape[0])):
                 clusterer = hdbscan.HDBSCAN(min_cluster_size=i)
                 clusterer = clusterer.fit(to_cluster)
+                if (clusterer.probabilities_[clusterer.probabilities_ > 0].shape[0]==0):
+                    #print(clusterer.probabilities_)
+                    continue
                 # more mean probability -> more likely fitting clusters
                 if (
                     clusterer.probabilities_[clusterer.probabilities_ > 0].mean()
@@ -69,14 +74,22 @@ class AlgoHDBSCAN(ClusteringAlgorythm):
                         if metrics != best_min_cluster[best_metric]:
                             best_min_cluster[best_metric] = metrics
 
+        print(f"best metrics is: {best_min_cluster[best_metric]}")
+        print(f"best min number of cluster is: {best_min_cluster[n_cluster]}")
+        if best_min_cluster[n_cluster]!=0:
         # computes again for the best inputs
-        clusterer = hdbscan.HDBSCAN(
-            min_cluster_size=best_min_cluster[n_cluster],
-            metric=best_min_cluster[best_metric],
-        )
-        clusterer = clusterer.fit(to_cluster)
+            clusterer = hdbscan.HDBSCAN(
+                min_cluster_size=best_min_cluster[n_cluster],
+                metric=best_min_cluster[best_metric],
+            )
+
+            clusterer = clusterer.fit(to_cluster)
         retval = df.copy()
 
-        # adds a column defining with cluster the row belongs to
-        retval["ClusterID"] = clusterer.labels_
+        if best_min_cluster[n_cluster]!=0:
+            # adds a column defining with cluster the row belongs to
+            retval["ClusterID"] = clusterer.labels_
+        else:
+            # if all noise target everything as -1
+            retval["ClusterID"] = np.zeros((retval.shape[0], 1))-1
         return retval

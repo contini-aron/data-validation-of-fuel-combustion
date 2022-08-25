@@ -42,7 +42,7 @@ def getAffinityMatrix(coordinates, k = 7):
     np.fill_diagonal(affinity_matrix, 0)
     return affinity_matrix
 
-def eigenDecomposition(A, topK = 5):
+def eigenDecomposition(A, topK = 1):
     """
     :param A: Affinity matrix
     :param plot: plots the sorted eigen values for visual inspection
@@ -72,7 +72,7 @@ def eigenDecomposition(A, topK = 5):
     index_largest_gap = np.argsort(np.diff(eigenvalues))[::-1][:topK]
     nb_clusters = index_largest_gap + 1
         
-    return nb_clusters, eigenvalues, eigenvectors
+    return int(nb_clusters)
 
 class AlgoSpectral(ClusteringAlgorythm):
     """
@@ -89,7 +89,7 @@ class AlgoSpectral(ClusteringAlgorythm):
         print("evaluating algorythm Spectral")
         to_cluster = df.loc[:, columns]
         to_cluster = normalize(to_cluster)
-        aff_matrix = getAffinityMatrix(to_cluster)
+        aff_matrix = getAffinityMatrix(to_cluster, k=min(to_cluster.shape[0]-1, 7))
         n_clusters = eigenDecomposition(aff_matrix)
         print("best number of clusters is ", n_clusters)
         clusters = cluster.SpectralClustering(n_clusters=n_clusters, assign_labels="discretize", random_state=0).fit(to_cluster)

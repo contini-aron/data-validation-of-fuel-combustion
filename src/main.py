@@ -6,7 +6,6 @@ import pandas as pd
 from clustering import Clusterer
 from clustering import input_parse as ip
 from clustering import AlgoHDBSCAN
-from clustering import AlgoAffinityPropagation
 from clustering import AlgoSpectral
 from clustering import AlgoKmeans
 from clustering import plot_percentiles
@@ -48,16 +47,21 @@ if __name__ == "__main__":
 
         clusterer = Clusterer(AlgoKmeans)
         data = clusterer.start(df, columns)
+        print("done")
         #data = pd.read_excel(f"{os.curdir}{os.sep}metadata{os.sep}clustered.xlsx")
         clusterer.get_metadata(data=data, slc=columns, statistics_names=stat_names, count=True)
         clusterer.get_best_clusters()
+        clusterer.export()
         clusterer.parallel_coordinates_plot()
-        print(data)
-        print(data["ClusterID"].max())
-        plot_percentiles(df.loc[:, get_columns()])
-        data.to_excel("./metadata/clustered.xlsx")
-
-    data = pd.read_excel("./metadata/clustered.xlsx")
+        clusterer.start(df, columns, groupby=["Reactor"])
+        clusterer.export(groupby=True)
+        clusterer.groupby_parallel_plots(best=True, groupby_columns=["Reactor"])
+        #print(data)
+        #print(data["ClusterID"].max())
+        #plot_percentiles(df.loc[:, get_columns()])
+        #data.to_excel("./metadata/clustered.xlsx")
+"""
+    data = pd.read_excel("./metadata/whole_dataset/clustered.xlsx")
     print("bro type is :", type(stats["mean"]))
     metadata = groupanddescribe(data, slc=columns, statistics=stats, count=True)
     metadata.to_excel("./metadata/metadata.xlsx")
@@ -87,3 +91,4 @@ if __name__ == "__main__":
     df = pd.read_excel("./input_files/data.xlsx")
     df = ip.parse(df)
     compute_grouped(df, get_columns(), get_groupby(), AlgoKmeans, stats)
+"""
